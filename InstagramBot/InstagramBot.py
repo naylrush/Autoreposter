@@ -4,7 +4,7 @@ from typing import List
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
 
-from InstagramBot.SimplePost import MediaType
+from InstagramBot.MediaType import MediaType
 from InstagramBot.SimplePost import SimplePost
 from hidden.insta.access_token import access_token
 

@@ -3,25 +3,9 @@ import pathlib
 import urllib.request
 from collections import Counter
 from datetime import datetime
-from enum import Enum
 from typing import List
 
-
-class MediaType(Enum):
-    IMAGE = 0,
-    VIDEO = 1
-
-    def extention(self):
-        return media_type_extention[self]
-
-    def __str__(self):
-        return self.name
-
-
-media_type_extention = {
-    MediaType.IMAGE: 'jpg',
-    MediaType.VIDEO: 'mp4'
-}
+from InstagramBot.MediaType import MediaType
 
 
 class SimplePost:

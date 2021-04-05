@@ -6,7 +6,7 @@ from instagram_basic_display.InstagramBasicDisplayException import InstagramBasi
 
 from InstagramBot.SimplePost import MediaType
 from InstagramBot.SimplePost import SimplePost
-from hidden.access_token import access_token
+from hidden.insta.access_token import access_token
 
 
 class InstagramBot:

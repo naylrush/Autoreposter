@@ -1,5 +1,5 @@
-from hidden.access_code import access_code
-from hidden.app_data import app_data
+from hidden.insta.access_code import access_code
+from hidden.insta.app_data import app_data
 
 from InstagramBot.InstagramBot import InstagramBot
 

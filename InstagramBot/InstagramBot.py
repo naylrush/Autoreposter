@@ -1,6 +1,6 @@
+from datetime import datetime
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
-from datetime import datetime
 import urllib.request
 
 from hidden.access_token import access_token
@@ -93,8 +93,11 @@ class InstagramBot:
         """
         Saves access token into 'hidden/access_token.py' which can be imported and used as variable
         """
-        with open(self.saved_token_path, 'w') as out:
-            out.write(f'access_token = {self.access_token}\n')
+        try:
+            with open(self.saved_token_path, 'w') as out:
+                out.write(f"access_token = '{self.access_token}\n'")
+        except FileNotFoundError as e:
+            print(f'{e.strerror}: "{e.filename}"')
 
     def download_photos_from_post(self, post, post_id=None) -> int:
         """

@@ -1,8 +1,10 @@
+from collections import Counter
 from typing import List
 
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
 
+from InstagramBot.SimplePost import MediaType
 from InstagramBot.SimplePost import SimplePost
 from hidden.access_token import access_token
 
@@ -105,7 +107,7 @@ class InstagramBot:
         Downloads user posts after date and time if given or all user posts
 
         :param begin_dttm: begin datetime or None
-        :return: downloaded photo paths
+        :return: paths to downloaded files
         """
         return download_posts(self.get_user_posts(begin_dttm))
 
@@ -116,18 +118,21 @@ def convert_to_simple_posts(posts: List[dict]) -> List[SimplePost]:
 
 def download_posts(posts: List[SimplePost]) -> List[str]:
     """
-    Downloads photos from given posts
+    Downloads content from given posts
 
-    :return downloaded photos paths
+    :return paths to downloaded files
     """
+    content_counter = Counter()
     post_count = len(posts)
-    photo_count = 0
-    photo_paths = []
+    paths = []
 
     for post in posts:
-        photo_count += len(post.urls)
-        photo_paths += post.download_photos()
+        new_paths, new_counter = post.download_content()
 
-    print(f'Downloaded {photo_count} photos from {post_count} posts')
+        paths += new_paths
+        content_counter.update(new_counter)
 
-    return photo_paths
+    print(f'Downloaded {content_counter.get(MediaType.IMAGE)} images and {content_counter.get(MediaType.VIDEO)} videos '
+          f'from {post_count} posts')
+
+    return paths

@@ -1,8 +1,9 @@
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
 from datetime import datetime
-import json
 import urllib.request
+
+from hidden.access_token import access_token
 
 
 def download_jpg_by_url(url, filename):
@@ -22,12 +23,9 @@ class InstagramBot:
     def __init__(self, app_data, access_code=None):
         self.insta = InstagramBasicDisplay(**app_data)
 
-        self.saved_token_filename = 'access_token.hidden'
+        self.saved_token_path = 'hidden/access_token.py'
 
-        with open(self.saved_token_filename) as saved_token_json:
-            saved_token = json.load(saved_token_json).get('access_token')
-
-        self.access_token = self.refresh_or_retrieve_access_token(saved_token, access_code)
+        self.access_token = self.refresh_or_retrieve_access_token(access_token, access_code)
         self.save_access_token()
 
         self.insta.set_access_token(self.access_token)
@@ -93,10 +91,10 @@ class InstagramBot:
 
     def save_access_token(self):
         """
-        Saves access token into 'access_token.hidden' which can be imported and used as variable
+        Saves access token into 'hidden/access_token.py' which can be imported and used as variable
         """
-        with open(self.saved_token_filename, 'w') as out:
-            out.write(json.dumps({'access_token': self.access_token}, indent=4))
+        with open(self.saved_token_path, 'w') as out:
+            out.write(f'access_token = {self.access_token}\n')
 
     def download_photos_from_post(self, post, post_id=None) -> int:
         """

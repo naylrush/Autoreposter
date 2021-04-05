@@ -1,22 +1,9 @@
-from datetime import datetime
+from hidden.access_token import access_token
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
-import urllib.request
+from typing import List
 
-from hidden.access_token import access_token
-
-
-def download_jpg_by_url(url, filename):
-    with urllib.request.urlopen(url) as photo_raw:
-        with open(f'downloads/{filename}.jpg', 'wb') as photo_file:
-            photo_file.write(photo_raw.read())
-
-
-iso_time_format = '%Y-%m-%dT%H:%M:%S%z'
-
-
-def get_post_dttm(post):
-    return datetime.strptime(post.get('timestamp'), iso_time_format).replace(tzinfo=None)
+from SimplePost import SimplePost
 
 
 class InstagramBot:
@@ -29,9 +16,8 @@ class InstagramBot:
         self.save_access_token()
 
         self.insta.set_access_token(self.access_token)
-        self.username = self.insta.get_user_profile().get('username')
 
-    def refresh_or_retrieve_access_token(self, saved_token, access_code):
+    def refresh_or_retrieve_access_token(self, saved_token, access_code) -> str:
         """
         If previously used access token is not None and is still not expired, function returns new access token
         Otherwise, function gets new access token using access code is provided
@@ -58,7 +44,7 @@ class InstagramBot:
         """
         return self.insta.get_login_url()
 
-    def retrieve_access_token(self, access_code):
+    def retrieve_access_token(self, access_code) -> str:
         """
         Retrieves and saves access token based on access code
 
@@ -95,62 +81,22 @@ class InstagramBot:
         """
         try:
             with open(self.saved_token_path, 'w') as out:
-                out.write(f"access_token = '{self.access_token}\n'")
+                out.write(f"access_token = '{self.access_token}'\n")
         except FileNotFoundError as e:
             print(f'{e.strerror}: "{e.filename}"')
 
-    def download_photos_from_post(self, post, post_id=None) -> int:
-        """
-        Requires access token
-        Downloads all photos from posts
-        Saves photos as 'username-post_id' for single photo in post and 'username-post_id-i' for carousel
-
-        :param post: post
-        :param post_id: extra suffix
-        :return: number of downloaded photos
-        """
-        media_type = post.get('media_type')
-        extra = post_id or post.get('id')
-
-        if media_type == 'IMAGE':
-            url = post.get('media_url')
-            download_jpg_by_url(url, f'{self.username}-{extra}')
-            return 1
-        elif media_type == 'CAROUSEL_ALBUM':
-            data = post.get('children').get('data')
-            for i, image_media in enumerate(data, 1):
-                self.download_photos_from_post(image_media, f'{extra}-{i}')
-            return len(data)
-
-    def get_user_posts(self, begin_dttm=None):
+    def get_user_posts(self, begin_dttm=None) -> List[SimplePost]:
         """
         Requires access token
         Gets user posts after date and time if given or all user posts
 
         :param begin_dttm: begin datetime or None
+        :return: list of SimplePost
         """
 
-        posts = self.insta.get_user_media().get('data')
+        posts = convert_to_simple_posts(self.insta.get_user_media().get('data'))
 
-        if not begin_dttm:
-            return posts
-
-        return list(filter(lambda post: get_post_dttm(post) >= begin_dttm, posts))
-
-    def _download_user_posts(self, posts):
-        """
-        Requires access token
-        Downloads photos from given user posts
-
-        :param posts: posts
-        """
-        post_count = len(posts)
-        photo_count = 0
-
-        for post in posts:
-            photo_count += self.download_photos_from_post(post)
-
-        print(f'Downloaded {photo_count} photos from {post_count} posts')
+        return list(filter(lambda post: post.dttm >= begin_dttm, posts)) if begin_dttm else posts
 
     def download_user_posts(self, begin_dttm=None):
         """
@@ -161,4 +107,21 @@ class InstagramBot:
         """
 
         posts = self.get_user_posts(begin_dttm)
-        self._download_user_posts(posts)
+        download_posts(posts)
+
+
+def convert_to_simple_posts(posts) -> List[SimplePost]:
+    return list(map(lambda post: SimplePost(post), posts))
+
+
+def download_posts(posts: List[SimplePost]):
+    """
+    Downloads given posts
+    """
+    post_count = len(posts)
+    photo_count = 0
+
+    for post in posts:
+        photo_count += post.download_photos()
+
+    print(f'Downloaded {photo_count} photos from {post_count} posts')

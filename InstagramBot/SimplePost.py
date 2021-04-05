@@ -1,5 +1,7 @@
-from datetime import datetime
+import pathlib
 import urllib.request
+from datetime import datetime
+from typing import List
 
 
 class SimplePost:
@@ -19,21 +21,19 @@ class SimplePost:
             for image_data in data:
                 self.urls.append(image_data.get('media_url'))
 
-    def download_photos(self) -> int:
+    def download_photos(self) -> List[str]:
         """
         Saves photos as 'username-post_id' for single photo in post and 'username-post_id-i' for carousel
 
-        :return: number of downloaded photos
+        :return: downloaded photo paths
         """
-        filename = f'{self.username}-{self.post_id}'
-
         if len(self.urls) == 1:
-            download_jpg_by_url(self.urls[0], filename)
+            return [download_jpg_by_url(self.urls[0], f'{self.username}-{self.post_id}')]
         else:
+            paths = []
             for i, url in enumerate(self.urls, 1):
-                download_jpg_by_url(url, f'{filename}-{i}')
-
-        return len(self.urls)
+                paths.append(download_jpg_by_url(url, f'{self.username}-{self.post_id}-{i}'))
+            return paths
 
 
 iso_time_format = '%Y-%m-%dT%H:%M:%S%z'
@@ -43,7 +43,17 @@ def get_post_dttm(post):
     return datetime.strptime(post.get('timestamp'), iso_time_format).replace(tzinfo=None)
 
 
+working_dir = pathlib.Path().absolute()
+
+
 def download_jpg_by_url(url, filename):
+    """
+    :param url: URL
+    :param filename: filename whithout .jpg
+    :return: path where file was saved
+    """
     with urllib.request.urlopen(url) as photo_raw:
-        with open(f'downloads/{filename}.jpg', 'wb') as photo_file:
+        path = f'{working_dir}/downloads/{filename}.jpg'
+        with open(path, 'wb') as photo_file:
             photo_file.write(photo_raw.read())
+        return path

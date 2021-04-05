@@ -1,9 +1,10 @@
-from hidden.access_token import access_token
-from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
-from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
 from typing import List
 
-from SimplePost import SimplePost
+from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
+from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
+
+from InstagramBot.SimplePost import SimplePost
+from hidden.access_token import access_token
 
 
 class InstagramBot:
@@ -98,30 +99,35 @@ class InstagramBot:
 
         return list(filter(lambda post: post.dttm >= begin_dttm, posts)) if begin_dttm else posts
 
-    def download_user_posts(self, begin_dttm=None):
+    def download_user_posts(self, begin_dttm=None) -> List[str]:
         """
         Requires access token
         Downloads user posts after date and time if given or all user posts
 
-        :param begin_dttm: begin datetime
+        :param begin_dttm: begin datetime or None
+        :return: downloaded photo paths
         """
-
-        posts = self.get_user_posts(begin_dttm)
-        download_posts(posts)
+        return download_posts(self.get_user_posts(begin_dttm))
 
 
 def convert_to_simple_posts(posts) -> List[SimplePost]:
     return list(map(lambda post: SimplePost(post), posts))
 
 
-def download_posts(posts: List[SimplePost]):
+def download_posts(posts: List[SimplePost]) -> List[str]:
     """
-    Downloads given posts
+    Downloads photos from given posts
+
+    :return downloaded photos paths
     """
     post_count = len(posts)
     photo_count = 0
+    photo_paths = []
 
     for post in posts:
-        photo_count += post.download_photos()
+        photo_count += len(post.urls)
+        photo_paths += post.download_photos()
 
     print(f'Downloaded {photo_count} photos from {post_count} posts')
+
+    return photo_paths

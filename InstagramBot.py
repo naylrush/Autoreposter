@@ -1,7 +1,11 @@
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
+import datetime
 import json
 import urllib.request
+
+
+iso_time_format = '%Y-%m-%dT%H:%M:%S%z'
 
 
 def download_jpg_by_url(url, filename):
@@ -127,3 +131,23 @@ class InstagramBot:
             photo_count += self.download_photos_from_post(post)
 
         print(f'Downloaded {photo_count} photos from {post_count} posts')
+
+    def download_user_posts_after(self, begin_dttm):
+        """
+        Requires access token
+        Downloads all user photos after given date and time
+        """
+
+        data = self.insta.get_user_media().get('data')
+
+        post_count = 0
+        photo_count = 0
+
+        for post in data:
+            post_dttm = datetime.datetime.strptime(post.get('timestamp'), iso_time_format).replace(tzinfo=None)
+
+            if post_dttm >= begin_dttm:
+                post_count += 1
+                photo_count += self.download_photos_from_post(post)
+
+        print(f'Downloaded {photo_count} photos from {post_count} posts after {begin_dttm}')

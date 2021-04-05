@@ -1,6 +1,7 @@
 import json
 
 from InstagramBot import InstagramBot
+from datetime import datetime, date, time
 
 
 def main():
@@ -13,7 +14,10 @@ def main():
 
     insta_bot = InstagramBot(app_data, access_code)
 
-    insta_bot.download_all_user_posts()
+    # insta_bot.download_all_user_posts()
+
+    # download today's posts
+    insta_bot.download_user_posts_after(datetime.combine(datetime.now(), time(0, 0)))
 
 
 if __name__ == '__main__':

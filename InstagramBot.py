@@ -1,17 +1,21 @@
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
-import datetime
+from datetime import datetime
 import json
 import urllib.request
-
-
-iso_time_format = '%Y-%m-%dT%H:%M:%S%z'
 
 
 def download_jpg_by_url(url, filename):
     with urllib.request.urlopen(url) as photo_raw:
         with open(f'downloads/{filename}.jpg', 'wb') as photo_file:
             photo_file.write(photo_raw.read())
+
+
+iso_time_format = '%Y-%m-%dT%H:%M:%S%z'
+
+
+def get_post_dttm(post):
+    return datetime.strptime(post.get('timestamp'), iso_time_format).replace(tzinfo=None)
 
 
 class InstagramBot:
@@ -117,37 +121,43 @@ class InstagramBot:
                 self.download_photos_from_post(image_media, f'{extra}-{i}')
             return len(data)
 
-    def download_all_user_posts(self):
+    def get_user_posts(self, begin_dttm=None):
         """
         Requires access token
-        Downloads all user photos
-        """
-        data = self.insta.get_user_media().get('data')
+        Gets user posts after date and time if given or all user posts
 
-        post_count = len(data)
+        :param begin_dttm: begin datetime or None
+        """
+
+        posts = self.insta.get_user_media().get('data')
+
+        if not begin_dttm:
+            return posts
+
+        return list(filter(lambda post: get_post_dttm(post) >= begin_dttm, posts))
+
+    def _download_user_posts(self, posts):
+        """
+        Requires access token
+        Downloads photos from given user posts
+
+        :param posts: posts
+        """
+        post_count = len(posts)
         photo_count = 0
 
-        for post in data:
+        for post in posts:
             photo_count += self.download_photos_from_post(post)
 
         print(f'Downloaded {photo_count} photos from {post_count} posts')
 
-    def download_user_posts_after(self, begin_dttm):
+    def download_user_posts(self, begin_dttm=None):
         """
         Requires access token
-        Downloads all user photos after given date and time
+        Downloads user posts after date and time if given or all user posts
+
+        :param begin_dttm: begin datetime
         """
 
-        data = self.insta.get_user_media().get('data')
-
-        post_count = 0
-        photo_count = 0
-
-        for post in data:
-            post_dttm = datetime.datetime.strptime(post.get('timestamp'), iso_time_format).replace(tzinfo=None)
-
-            if post_dttm >= begin_dttm:
-                post_count += 1
-                photo_count += self.download_photos_from_post(post)
-
-        print(f'Downloaded {photo_count} photos from {post_count} posts after {begin_dttm}')
+        posts = self.get_user_posts(begin_dttm)
+        self._download_user_posts(posts)

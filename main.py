@@ -14,10 +14,9 @@ def main():
 
     insta_bot = InstagramBot(app_data, access_code)
 
-    # insta_bot.download_all_user_posts()
-
     # download today's posts
-    insta_bot.download_user_posts_after(datetime.combine(datetime.now(), time(0, 0)))
+    today_dttm = datetime.combine(datetime.now().date(), time())
+    insta_bot.download_user_posts(begin_dttm=today_dttm)
 
 
 if __name__ == '__main__':

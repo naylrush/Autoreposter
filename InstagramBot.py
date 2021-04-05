@@ -38,7 +38,7 @@ class InstagramBot:
 
         :param saved_token: previously used access token
         :param access_code: access code has to be provided to get new access token
-        :returns: new access token
+        :return: new access token
         """
         try:
             if saved_token:
@@ -54,7 +54,7 @@ class InstagramBot:
 
     def get_login_url(self) -> str:
         """
-        :returns: login URL you need to follow
+        :return: login URL you need to follow
         """
         return self.insta.get_login_url()
 
@@ -62,7 +62,7 @@ class InstagramBot:
         """
         Retrieves and saves access token based on access code
 
-        :returns: access token
+        :return: access token
         """
         # Get the short lived access token (valid for 1 hour)
         short_lived_token = self.insta.get_o_auth_token(access_code)
@@ -79,7 +79,7 @@ class InstagramBot:
         """
         Retrieves and saves new access token based on previously got token
 
-        :returns: access token
+        :return: access token
         """
         # Exchange this token for a long lived token (valid for 60 days)
         long_lived_token = self.insta.refresh_token(token)

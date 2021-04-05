@@ -8,7 +8,7 @@ from hidden.access_token import access_token
 
 
 class InstagramBot:
-    def __init__(self, app_data, access_code=None):
+    def __init__(self, app_data: dict, access_code=None):
         self.insta = InstagramBasicDisplay(**app_data)
 
         self.saved_token_path = 'hidden/access_token.py'
@@ -18,7 +18,7 @@ class InstagramBot:
 
         self.insta.set_access_token(self.access_token)
 
-    def refresh_or_retrieve_access_token(self, saved_token, access_code) -> str:
+    def refresh_or_retrieve_access_token(self, saved_token: str, access_code: str) -> str:
         """
         If previously used access token is not None and is still not expired, function returns new access token
         Otherwise, function gets new access token using access code is provided
@@ -45,7 +45,7 @@ class InstagramBot:
         """
         return self.insta.get_login_url()
 
-    def retrieve_access_token(self, access_code) -> str:
+    def retrieve_access_token(self, access_code: str) -> str:
         """
         Retrieves and saves access token based on access code
 
@@ -62,7 +62,7 @@ class InstagramBot:
         # Get new access token
         return long_lived_token.get('access_token')
 
-    def refresh_access_token(self, token) -> str:
+    def refresh_access_token(self, token: str) -> str:
         """
         Retrieves and saves new access token based on previously got token
 
@@ -110,7 +110,7 @@ class InstagramBot:
         return download_posts(self.get_user_posts(begin_dttm))
 
 
-def convert_to_simple_posts(posts) -> List[SimplePost]:
+def convert_to_simple_posts(posts: List[dict]) -> List[SimplePost]:
     return list(map(lambda post: SimplePost(post), posts))
 
 

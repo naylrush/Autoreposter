@@ -35,18 +35,21 @@ class SimplePost:
                 paths.append(download_jpg_by_url(url, f'{self.username}-{self.post_id}-{i}'))
             return paths
 
+    def urlopen_photos(self) -> List:
+        return [urllib.request.urlopen(url) for url in self.urls]
+
 
 iso_time_format = '%Y-%m-%dT%H:%M:%S%z'
 
 
-def get_post_dttm(post):
+def get_post_dttm(post: dict):
     return datetime.strptime(post.get('timestamp'), iso_time_format).replace(tzinfo=None)
 
 
 working_dir = pathlib.Path().absolute()
 
 
-def download_jpg_by_url(url, filename):
+def download_jpg_by_url(url: str, filename: str):
     """
     :param url: URL
     :param filename: filename whithout .jpg

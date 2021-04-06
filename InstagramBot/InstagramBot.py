@@ -11,8 +11,8 @@ from hidden.insta.access_token import access_token
 
 
 class InstagramBot:
-    def __init__(self, app_data: dict, access_code=None):
-        self.insta = InstagramBasicDisplay(**app_data)
+    def __init__(self, insta: InstagramBasicDisplay, access_code=None):
+        self.insta = insta
 
         self.access_token = self.refresh_or_retrieve_access_token(access_token, access_code)
         self.save_access_token()

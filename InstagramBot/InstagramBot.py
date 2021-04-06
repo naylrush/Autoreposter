@@ -4,6 +4,7 @@ from typing import List
 from instagram_basic_display.InstagramBasicDisplay import InstagramBasicDisplay
 from instagram_basic_display.InstagramBasicDisplayException import InstagramBasicDisplayException
 
+import hidden.insta.access_token
 from InstagramBot.MediaType import MediaType
 from InstagramBot.SimplePost import SimplePost
 from hidden.insta.access_token import access_token
@@ -12,8 +13,6 @@ from hidden.insta.access_token import access_token
 class InstagramBot:
     def __init__(self, app_data: dict, access_code=None):
         self.insta = InstagramBasicDisplay(**app_data)
-
-        self.saved_token_path = 'hidden/access_token.py'
 
         self.access_token = self.refresh_or_retrieve_access_token(access_token, access_code)
         self.save_access_token()
@@ -80,10 +79,10 @@ class InstagramBot:
 
     def save_access_token(self):
         """
-        Saves access token into 'hidden/access_token.py' which can be imported and used as variable
+        Saves access token into 'hidden.insta.access_token' which can be imported and used as variable
         """
         try:
-            with open(self.saved_token_path, 'w') as out:
+            with open(hidden.insta.access_token.__file__, 'w') as out:
                 out.write(f"access_token = '{self.access_token}'\n")
         except FileNotFoundError as e:
             print(f'{e.strerror}: "{e.filename}"')

@@ -5,7 +5,7 @@ from collections import Counter
 from datetime import datetime
 from typing import List
 
-from InstagramBot.MediaType import MediaType
+from instagram_bot.MediaType import MediaType
 
 
 class SimplePost:

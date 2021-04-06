@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pytz import timezone
 
-from InstagramBot import insta_bot
+from instagram_bot import insta_bot
 
 
 def main():

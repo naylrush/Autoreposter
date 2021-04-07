@@ -3,9 +3,10 @@ import re
 from time import sleep
 from typing import List
 
-import telebot
+from telebot import TeleBot
 from telebot.types import Message, InputMediaPhoto, InputMediaVideo
-from telegram import MAX_CAPTION_LENGTH
+from telebot.apihelper import ApiException
+from telegram.constants import MAX_CAPTION_LENGTH
 
 import hidden.tg.channel_dict
 from hidden.tg.admins import admins
@@ -17,7 +18,7 @@ from telegram_bot.Channel import Channel
 
 
 class TelegramBot:
-    def __init__(self, tg: telebot.TeleBot, insta_bot: InstagramBot):
+    def __init__(self, tg: TeleBot, insta_bot: InstagramBot):
         self.tg = tg
         self.insta_bot = insta_bot
         self.channel = Channel(**channel_dict)
@@ -48,15 +49,17 @@ class TelegramBot:
         :param message:
         """
         if message.chat.username in admins:
-            channel_username = re.match('/set (@\\w{5,64})', message.text).group(1)
-            try:
-                channel_id = self.tg.get_chat(chat_id=channel_username).id
-                self.channel = Channel(channel_id)
-                self.save_channel()
+            match = re.match('/set (@\\w{5,64})', message.text)
+            if match:
+                channel_username = match.group(1)
+                try:
+                    channel_id = self.tg.get_chat(chat_id=channel_username).id
+                    self.channel = Channel(channel_id)
+                    self.save_channel()
 
-                self.reply_debug(message, 'Bot was connected')
-            except telebot.apihelper.ApiException as e:
-                self.reply_debug(message, get_tg_api_exception_text(e))
+                    self.reply_debug(message, 'Bot was connected')
+                except ApiException as e:
+                    self.reply_debug(message, get_tg_api_exception_text(e))
 
     def take_post(self, message: Message):
         """
@@ -82,7 +85,7 @@ class TelegramBot:
             try:
                 self.send_posts([post])
                 self.reply_debug(message, f'#{n} post was sent')
-            except telebot.apihelper.ApiException as e:
+            except ApiException as e:
                 self.reply_debug(message, get_tg_api_exception_text(e))
 
     def update_channel(self, message: Message = None):
@@ -103,7 +106,7 @@ class TelegramBot:
             try:
                 self.send_posts(posts)
                 self.reply_debug(message, f'{len(posts)} posts were sent')
-            except telebot.apihelper.ApiException as e:
+            except ApiException as e:
                 self.reply_debug(message, get_tg_api_exception_text(e))
             # save the channel last updated dttm
             self.save_channel()

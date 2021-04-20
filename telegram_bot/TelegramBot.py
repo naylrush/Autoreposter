@@ -4,8 +4,8 @@ from time import sleep
 from typing import List
 
 from telebot import TeleBot
-from telebot.types import Message, InputMediaPhoto, InputMediaVideo
 from telebot.apihelper import ApiException
+from telebot.types import Message, InputMediaPhoto, InputMediaVideo
 from telegram.constants import MAX_CAPTION_LENGTH
 
 import hidden.tg.channel_dict
@@ -18,18 +18,33 @@ from telegram_bot.Channel import Channel
 
 
 class TelegramBot:
-    def __init__(self, tg: TeleBot, insta_bot: InstagramBot):
+    def __init__(self, tg: TeleBot, insta_bot: InstagramBot, debug: bool = True):
         self.tg = tg
         self.insta_bot = insta_bot
         self.channel = Channel(**channel_dict)
 
+        self.debug = debug
+
     def polling(self, none_stop=False):
         self.tg.polling(none_stop=none_stop)
 
-    def reply_debug(self, message, text):
+    def answer(self, message: Message, text):
         if message:
-            self.tg.reply_to(message, text=text)
-        print(text)
+            self.tg.send_message(message.chat.id, text=text)
+        if self.debug:
+            print(text)
+
+    def check_admin(self, message):
+        if message.chat.username not in admins:
+            self.answer(message, 'You are not an admin')
+            return False
+        return True
+
+    def check_channel_set(self, message):
+        if not self.channel:
+            self.answer(message, 'Channel is not set')
+            return False
+        return True
 
     def save_channel(self):
         """
@@ -48,18 +63,21 @@ class TelegramBot:
 
         :param message:
         """
-        if message.chat.username in admins:
+        if self.check_admin(message):
             match = re.match('/set (@\\w{5,64})', message.text)
-            if match:
-                channel_username = match.group(1)
-                try:
-                    channel_id = self.tg.get_chat(chat_id=channel_username).id
-                    self.channel = Channel(channel_id)
-                    self.save_channel()
+            if not match:
+                self.answer(message, 'Write a channel using @channel')
+                return
 
-                    self.reply_debug(message, 'Bot was connected')
-                except ApiException as e:
-                    self.reply_debug(message, get_tg_api_exception_text(e))
+            channel_username = match.group(1)
+            try:
+                channel_id = self.tg.get_chat(chat_id=channel_username).id
+                self.channel = Channel(channel_id)
+                self.save_channel()
+
+                self.answer(message, 'Bot was connected')
+            except ApiException as e:
+                self.answer(message, get_tg_api_exception_text(e))
 
     def take_post(self, message: Message):
         """
@@ -67,26 +85,27 @@ class TelegramBot:
 
         :param message:
         """
-        if message.chat.username in admins and self.channel:
+        if self.check_admin(message) and self.check_channel_set(message):
+            self.answer(message, 'Taking...')
             match = re.match('/take (-?[0-9]+)', message.text)
             n = int(match.group(1)) if match else 1
 
             if n <= 0:
-                self.reply_debug(message, 'The number must be 1 or bigger')
+                self.answer(message, 'The number must be 1 or greater')
                 return
 
             posts = self.insta_bot.get_user_posts()
 
             if n > len(posts):
-                self.reply_debug(message, f'Too big number. Post count now is {len(posts)}')
+                self.answer(message, f'Too big number. Current post count is {len(posts)}')
                 return
 
             post = posts[n - 1]
             try:
                 self.send_posts([post])
-                self.reply_debug(message, f'#{n} post was sent')
+                self.answer(message, f'#{n} post was sent')
             except ApiException as e:
-                self.reply_debug(message, get_tg_api_exception_text(e))
+                self.answer(message, get_tg_api_exception_text(e))
 
     def update_channel(self, message: Message = None):
         """
@@ -94,20 +113,21 @@ class TelegramBot:
 
         :param message:
         """
-        if not message or message.chat.username in admins and self.channel:
+        if not message or self.check_admin(message) and self.check_channel_set(message):
+            self.answer(message, 'Updating...')
             # get posts newer then last updated dttm of channel
             posts = self.insta_bot.get_user_posts(begin_dttm=self.channel.update())
             if not posts:
-                self.reply_debug(message, 'Is up to date')
+                self.answer(message, 'Is up to date')
                 return
 
             # reverse posts to send them in order of novelty
             posts.reverse()
             try:
                 self.send_posts(posts)
-                self.reply_debug(message, f'{len(posts)} posts were sent')
+                self.answer(message, f'{len(posts)} posts were sent')
             except ApiException as e:
-                self.reply_debug(message, get_tg_api_exception_text(e))
+                self.answer(message, get_tg_api_exception_text(e))
             # save the channel last updated dttm
             self.save_channel()
 
